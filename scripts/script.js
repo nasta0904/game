@@ -1,234 +1,279 @@
-// Основной скрипт для Квеста Верстальщика
-document.addEventListener('DOMContentLoaded', function() {
-    // Инициализация приложения
-    initQuest();
-    
-    // Обработчики событий
-    setupEventListeners();
-    
-    // Запуск анимаций
-    startAnimations();
-});
-
-function initQuest() {
-    console.log('Квест Верстальщика инициализирован!');
-    
-    // Загрузка прогресса из localStorage (если есть)
-    loadProgress();
-    
-    // Показ приветственного сообщения
-    showWelcomeMessage();
+/* Базовые стили */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-function setupEventListeners() {
-    // Обработчик для кнопки начала квеста
-    const startButton = document.getElementById('startQuest');
-    if (startButton) {
-        startButton.addEventListener('click', startQuest);
+body {
+    background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+    color: #fff;
+    min-height: 100vh;
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Экран загрузки */
+.loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #1a2a6c, #b21f1f);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.loader {
+    text-align: center;
+}
+
+.magic-orb {
+    width: 80px;
+    height: 80px;
+    border: 4px solid #3ad59f;
+    border-top: 4px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Общие стили экранов */
+.screen {
+    display: none;
+    min-height: 100vh;
+}
+
+.screen.active {
+    display: block;
+}
+
+/* Заголовки игры */
+.game-header {
+    text-align: center;
+    padding: 30px 0;
+}
+
+.game-title {
+    font-size: 3.5rem;
+    margin-bottom: 15px;
+    text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
+    background: linear-gradient(to right, #f8ff00, #3ad59f);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: titleGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes titleGlow {
+    from {
+        text-shadow: 0 0 20px #f8ff00;
     }
-    
-    // Обработчики для карточек уровней
-    const levelItems = document.querySelectorAll('.level-item');
-    levelItems.forEach((item, index) => {
-        item.addEventListener('click', () => {
-            selectLevel(index + 1);
-        });
-    });
-    
-    // Обработчики для карточек проектов
-    const projectCards = document.querySelectorAll('.project-card');
-    projectCards.forEach((card, index) => {
-        card.addEventListener('click', () => {
-            startProject(index);
-        });
-    });
-}
-
-function startAnimations() {
-    // Анимация прогресс-бара
-    animateProgressBar();
-    
-    // Добавление анимаций появления элементов
-    const animatedElements = document.querySelectorAll('.level-item, .project-card, .magic-card');
-    animatedElements.forEach((element, index) => {
-        element.style.opacity = '0';
-        element.style.transform = 'translateY(20px)';
-        
-        setTimeout(() => {
-            element.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-            element.style.opacity = '1';
-            element.style.transform = 'translateY(0)';
-        }, index * 200);
-    });
-}
-
-function animateProgressBar() {
-    const progressFill = document.querySelector('.progress-fill');
-    if (!progressFill) return;
-    
-    // Имитация прогресса обучения
-    setTimeout(() => {
-        progressFill.style.width = '50%';
-        progressFill.textContent = '50%';
-        updateStats(2, 3, 2, 4); // Обновляем статистику
-    }, 2000);
-    
-    // Дальнейшая анимация прогресса
-    setTimeout(() => {
-        progressFill.style.width = '75%';
-        progressFill.textContent = '75%';
-        updateStats(3, 4, 3, 6);
-    }, 4000);
-}
-
-function showWelcomeMessage() {
-    const welcomeMessages = [
-        "Добро пожаловать в мир Вебландии!",
-        "Готовы стать магом-верстальщиком?",
-        "Ваше приключение начинается сейчас!"
-    ];
-    
-    const randomMessage = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
-    
-    // Создаем и показываем всплывающее сообщение
-    const welcomeElement = document.createElement('div');
-    welcomeElement.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: rgba(58, 213, 159, 0.9);
-        color: #000;
-        padding: 15px 25px;
-        border-radius: 10px;
-        font-weight: bold;
-        z-index: 1000;
-        transform: translateX(100%);
-        transition: transform 0.5s ease;
-    `;
-    welcomeElement.textContent = randomMessage;
-    
-    document.body.appendChild(welcomeElement);
-    
-    // Анимация появления
-    setTimeout(() => {
-        welcomeElement.style.transform = 'translateX(0)';
-    }, 100);
-    
-    // Автоматическое скрытие через 3 секунды
-    setTimeout(() => {
-        welcomeElement.style.transform = 'translateX(100%)';
-        setTimeout(() => {
-            document.body.removeChild(welcomeElement);
-        }, 500);
-    }, 3000);
-}
-
-function startQuest() {
-    // Эффект для кнопки начала
-    const button = document.getElementById('startQuest');
-    button.classList.add('pulse');
-    
-    // Показ сообщения о начале квеста
-    alert('Квест начинается! Первый уровень: Основы HTML. Создайте свою первую веб-страницу!');
-    
-    // Сохранение начала квеста
-    saveProgress('questStarted', true);
-    
-    // Убираем анимацию через 2 секунды
-    setTimeout(() => {
-        button.classList.remove('pulse');
-    }, 2000);
-}
-
-function selectLevel(levelNumber) {
-    const levelNames = [
-        "Основы HTML",
-        "Введение в CSS", 
-        "Работа с макетом",
-        "Адаптивный дизайн",
-        "Продвинутые техники"
-    ];
-    
-    const levelName = levelNames[levelNumber - 1] || `Уровень ${levelNumber}`;
-    
-    // Эффект выделения выбранного уровня
-    const levelItems = document.querySelectorAll('.level-item');
-    levelItems.forEach(item => item.style.background = 'rgba(255, 255, 255, 0.1)');
-    levelItems[levelNumber - 1].style.background = 'rgba(58, 213, 159, 0.3)';
-    
-    // Показ информации об уровне
-    console.log(`Выбран уровень: ${levelName}`);
-    
-    // Здесь можно добавить переход на страницу уровня
-    // window.location.href = `level-${levelNumber}.html`;
-}
-
-function startProject(projectIndex) {
-    const projectNames = [
-        "Личная визитка",
-        "Галерея изображений",
-        "Адаптивный лендинг", 
-        "Интерактивный сайт"
-    ];
-    
-    const projectName = projectNames[projectIndex] || `Проект ${projectIndex + 1}`;
-    
-    // Эффект для карточки проекта
-    const projectCard = document.querySelectorAll('.project-card')[projectIndex];
-    projectCard.style.animation = 'pulse 0.5s';
-    
-    setTimeout(() => {
-        projectCard.style.animation = '';
-    }, 500);
-    
-    // Показ сообщения о начале проекта
-    alert(`Начинаем проект: ${projectName}! Приготовьтесь к битве с этим боссом!`);
-    
-    // Сохранение прогресса проекта
-    saveProgress(`project_${projectIndex}`, 'started');
-}
-
-function updateStats(topics, levels, bosses, achievements) {
-    const statValues = document.querySelectorAll('.stat-value');
-    if (statValues.length >= 4) {
-        statValues[0].textContent = topics;
-        statValues[1].textContent = levels;
-        statValues[2].textContent = bosses;
-        statValues[3].textContent = achievements;
+    to {
+        text-shadow: 0 0 30px #3ad59f, 0 0 40px #3ad59f;
     }
 }
 
-function saveProgress(key, value) {
-    // Сохранение в localStorage
-    try {
-        localStorage.setItem(`quest_${key}`, JSON.stringify(value));
-    } catch (e) {
-        console.log('Не удалось сохранить прогресс:', e);
+.game-subtitle {
+    font-size: 1.4rem;
+    color: #e0e0e0;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* Кнопки меню */
+.menu-navigation {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 400px;
+    margin: 40px auto;
+}
+
+.menu-btn {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid transparent;
+    color: white;
+    padding: 20px 30px;
+    border-radius: 15px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.menu-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: #3ad59f;
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.btn-icon {
+    font-size: 1.5rem;
+}
+
+.start-btn { background: linear-gradient(135deg, #3ad59f, #2196f3); }
+.levels-btn { background: linear-gradient(135deg, #ff9800, #f44336); }
+.projects-btn { background: linear-gradient(135deg, #9c27b0, #673ab7); }
+.about-btn { background: linear-gradient(135deg, #607d8b, #455a64); }
+
+/* Карточка персонажа */
+.character-card {
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 20px;
+    padding: 25px;
+    margin: 30px auto;
+    max-width: 500px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.character-avatar {
+    position: relative;
+}
+
+.avatar {
+    font-size: 4rem;
+    background: linear-gradient(135deg, #3ad59f, #2196f3);
+    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 4px solid #fff;
+}
+
+.level-badge {
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    background: #f8ff00;
+    color: #000;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.character-info h3 {
+    color: #3ad59f;
+    margin-bottom: 15px;
+    font-size: 1.4rem;
+}
+
+.stats {
+    width: 100%;
+}
+
+.stat {
+    margin-bottom: 10px;
+}
+
+.stat-name {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.stat-bar {
+    height: 10px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.stat-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.5s ease;
+}
+
+.html-stat {
+    background: linear-gradient(to right, #e34c26, #f06529);
+}
+
+.css-stat {
+    background: linear-gradient(to right, #2965f1, #2aa9ff);
+}
+
+/* Заголовки экранов */
+.screen-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 30px;
+    padding: 20px 0;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.back-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.back-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.screen-header h2 {
+    color: #3ad59f;
+    font-size: 2.2rem;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .game-title {
+        font-size: 2.5rem;
+    }
+    
+    .game-subtitle {
+        font-size: 1.1rem;
+    }
+    
+    .character-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .menu-btn {
+        padding: 15px 20px;
+        font-size: 1rem;
+    }
+    
+    .screen-header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
     }
 }
-
-function loadProgress() {
-    // Загрузка из localStorage
-    try {
-        const questStarted = localStorage.getItem('quest_started');
-        if (questStarted) {
-            console.log('Продолжаем предыдущий квест...');
-        }
-    } catch (e) {
-        console.log('Не удалось загрузить прогресс:', e);
-    }
-}
-
-// Дополнительные утилиты
-function getRandomColor() {
-    const colors = ['#3ad59f', '#f8ff00', '#e34c26', '#2965f1'];
-    return colors[Math.floor(Math.random() * colors.length)];
-}
-
-// Экспорт функций для использования в других модулях (если нужно)
-window.QuestGame = {
-    startQuest,
-    selectLevel,
-    startProject,
-    updateStats
-};
