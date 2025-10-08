@@ -136,30 +136,36 @@ h1 {
         };
 
         this.currentScreen = 'mainMenu';
-        this.init();
     }
 
     init() {
-        this.hideLoadingScreen();
+        console.log('Инициализация игры...');
         this.setupEventListeners();
         this.loadGameProgress();
-        this.updateUI();
+        this.hideLoadingScreen();
     }
 
     hideLoadingScreen() {
+        console.log('Скрытие экрана загрузки...');
         setTimeout(() => {
             const loadingScreen = document.getElementById('loadingScreen');
             if (loadingScreen) {
                 loadingScreen.style.opacity = '0';
+                loadingScreen.style.transition = 'opacity 0.5s ease';
                 setTimeout(() => {
                     loadingScreen.style.display = 'none';
                     this.showScreen('mainMenu');
                 }, 500);
+            } else {
+                console.error('Экран загрузки не найден!');
+                this.showScreen('mainMenu');
             }
-        }, 2000);
+        }, 1500);
     }
 
     setupEventListeners() {
+        console.log('Настройка обработчиков событий...');
+        
         // Обработчики вкладок редактора
         const tabs = document.querySelectorAll('.tab');
         tabs.forEach(tab => {
@@ -168,17 +174,6 @@ h1 {
             });
         });
 
-        // Обработчики кнопок редактора
-        const runBtn = document.querySelector('.run-btn');
-        if (runBtn) {
-            runBtn.addEventListener('click', () => this.runCode());
-        }
-
-        const resetBtn = document.querySelector('.reset-btn');
-        if (resetBtn) {
-            resetBtn.addEventListener('click', () => this.resetCode());
-        }
-
         // Обработчики для требований заданий
         const requirements = document.querySelectorAll('[data-requirement]');
         requirements.forEach(req => {
@@ -186,9 +181,32 @@ h1 {
                 this.showRequirementHelp(e.target.dataset.requirement);
             });
         });
+
+        // Делегирование событий для динамически создаваемых элементов
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('back-btn')) {
+                this.showMainMenu();
+            }
+            if (e.target.classList.contains('level-start-btn')) {
+                const levelCard = e.target.closest('.level-card');
+                if (levelCard) {
+                    const levelNumber = parseInt(levelCard.dataset.level);
+                    this.startLevel(levelNumber);
+                }
+            }
+            if (e.target.classList.contains('project-start-btn')) {
+                const projectCard = e.target.closest('.project-card');
+                if (projectCard) {
+                    const projectNumber = parseInt(projectCard.dataset.project);
+                    this.startProject(projectNumber);
+                }
+            }
+        });
     }
 
     showScreen(screenName) {
+        console.log('Переключение на экран:', screenName);
+        
         // Скрыть все экраны
         const screens = document.querySelectorAll('.screen');
         screens.forEach(screen => {
@@ -200,6 +218,9 @@ h1 {
         if (targetScreen) {
             targetScreen.classList.add('active');
             this.currentScreen = screenName;
+            console.log('Экран показан:', screenName);
+        } else {
+            console.error('Экран не найден:', screenName);
         }
 
         this.updateUI();
@@ -227,6 +248,7 @@ h1 {
     }
 
     startLevel(levelNumber) {
+        console.log('Запуск уровня:', levelNumber);
         if (this.canStartLevel(levelNumber)) {
             this.player.currentLevel = levelNumber;
             this.showScreen('game');
@@ -237,6 +259,7 @@ h1 {
     }
 
     startProject(projectNumber) {
+        console.log('Запуск проекта:', projectNumber);
         if (this.canStartProject(projectNumber)) {
             this.player.currentProject = projectNumber;
             this.showScreen('game');
@@ -261,8 +284,12 @@ h1 {
     }
 
     loadLevel(levelNumber) {
+        console.log('Загрузка уровня:', levelNumber);
         const level = this.levels[levelNumber];
-        if (!level) return;
+        if (!level) {
+            console.error('Уровень не найден:', levelNumber);
+            return;
+        }
 
         // Обновляем интерфейс задания
         const taskDescription = document.getElementById('taskDescription');
@@ -274,14 +301,16 @@ h1 {
 
         if (taskRequirements) {
             const requirementsList = taskRequirements.querySelector('ul');
-            requirementsList.innerHTML = '';
-            
-            level.requirements.forEach(req => {
-                const li = document.createElement('li');
-                li.textContent = this.getRequirementDescription(req);
-                li.dataset.requirement = req;
-                requirementsList.appendChild(li);
-            });
+            if (requirementsList) {
+                requirementsList.innerHTML = '';
+                
+                level.requirements.forEach(req => {
+                    const li = document.createElement('li');
+                    li.textContent = this.getRequirementDescription(req);
+                    li.dataset.requirement = req;
+                    requirementsList.appendChild(li);
+                });
+            }
         }
 
         // Загружаем начальный код
@@ -298,16 +327,26 @@ h1 {
     }
 
     loadProject(projectNumber) {
-        // Здесь будет код для загрузки проектов
+        console.log('Загрузка проекта:', projectNumber);
         const taskDescription = document.getElementById('taskDescription');
         if (taskDescription) {
             taskDescription.textContent = `Проект ${projectNumber}: Создание полноценного веб-сайта`;
+        }
+        
+        // Загружаем код для проекта
+        const htmlEditor = document.getElementById('htmlEditor');
+        const cssEditor = document.getElementById('cssEditor');
+        
+        if (htmlEditor && cssEditor) {
+            htmlEditor.value = '<!DOCTYPE html>\n<html>\n<head>\n    <title>Мой проект</title>\n</head>\n<body>\n    <h1>Мой проект</h1>\n    <p>Начните создавать свой проект здесь!</p>\n</body>\n</html>';
+            cssEditor.value = 'body {\n    font-family: Arial, sans-serif;\n    margin: 0;\n    padding: 20px;\n}';
         }
         
         this.runCode();
     }
 
     switchEditorTab(tabName) {
+        console.log('Переключение вкладки:', tabName);
         // Переключаем активные вкладки
         const tabs = document.querySelectorAll('.tab');
         const codeAreas = document.querySelectorAll('.code-area');
@@ -315,16 +354,25 @@ h1 {
         tabs.forEach(tab => tab.classList.remove('active'));
         codeAreas.forEach(area => area.classList.remove('active'));
         
-        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-        document.getElementById(tabName + 'Editor').classList.add('active');
+        const targetTab = document.querySelector(`[data-tab="${tabName}"]`);
+        const targetEditor = document.getElementById(tabName + 'Editor');
+        
+        if (targetTab && targetEditor) {
+            targetTab.classList.add('active');
+            targetEditor.classList.add('active');
+        }
     }
 
     runCode() {
+        console.log('Запуск кода...');
         const htmlEditor = document.getElementById('htmlEditor');
         const cssEditor = document.getElementById('cssEditor');
         const previewFrame = document.getElementById('previewFrame');
         
-        if (!htmlEditor || !cssEditor || !previewFrame) return;
+        if (!htmlEditor || !cssEditor || !previewFrame) {
+            console.error('Не найдены элементы редактора');
+            return;
+        }
 
         const htmlCode = htmlEditor.value;
         const cssCode = `<style>${cssEditor.value}</style>`;
@@ -343,15 +391,20 @@ h1 {
             </html>
         `;
 
-        const previewDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
-        previewDoc.open();
-        previewDoc.write(fullCode);
-        previewDoc.close();
+        try {
+            const previewDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+            previewDoc.open();
+            previewDoc.write(fullCode);
+            previewDoc.close();
+        } catch (error) {
+            console.error('Ошибка при выполнении кода:', error);
+        }
 
         this.checkRequirements();
     }
 
     resetCode() {
+        console.log('Сброс кода...');
         const currentLevel = this.levels[this.player.currentLevel];
         if (currentLevel) {
             const htmlEditor = document.getElementById('htmlEditor');
@@ -369,8 +422,13 @@ h1 {
         const level = this.levels[this.player.currentLevel];
         if (!level) return;
 
-        const htmlCode = document.getElementById('htmlEditor').value;
-        const cssCode = document.getElementById('cssEditor').value;
+        const htmlEditor = document.getElementById('htmlEditor');
+        const cssEditor = document.getElementById('cssEditor');
+        
+        if (!htmlEditor || !cssEditor) return;
+
+        const htmlCode = htmlEditor.value;
+        const cssCode = cssEditor.value;
         const requirements = document.querySelectorAll('[data-requirement]');
         
         let completedRequirements = 0;
@@ -429,6 +487,8 @@ h1 {
         const level = this.levels[this.player.currentLevel];
         if (!level || this.player.completedLevels.includes(this.player.currentLevel)) return;
 
+        console.log('Завершение уровня:', this.player.currentLevel);
+
         // Награждаем игрока
         if (level.reward.html) {
             this.player.html += level.reward.html;
@@ -474,10 +534,16 @@ h1 {
     }
 
     updateUI() {
+        console.log('Обновление интерфейса...');
+        
         // Обновляем статистику игрока
-        document.getElementById('htmlValue').textContent = this.player.html;
-        document.getElementById('cssValue').textContent = this.player.css;
-        document.getElementById('playerLevel').textContent = this.player.level;
+        const htmlValue = document.getElementById('htmlValue');
+        const cssValue = document.getElementById('cssValue');
+        const playerLevel = document.getElementById('playerLevel');
+        
+        if (htmlValue) htmlValue.textContent = this.player.html;
+        if (cssValue) cssValue.textContent = this.player.css;
+        if (playerLevel) playerLevel.textContent = this.player.level;
 
         // Обновляем прогресс в главном меню
         const htmlStat = document.querySelector('.html-stat');
@@ -543,17 +609,21 @@ h1 {
     }
 
     showMessage(message, type = 'info') {
+        console.log('Показать сообщение:', message, type);
+        
         // Создаем элемент сообщения
         const messageElement = document.createElement('div');
         messageElement.className = `game-message game-message-${type}`;
         messageElement.textContent = message;
         
         // Стили для сообщения
+        const backgroundColor = type === 'error' ? '#f44336' : type === 'success' ? '#4caf50' : '#2196f3';
+        
         messageElement.style.cssText = `
             position: fixed;
             top: 20px;
             right: 20px;
-            background: ${type === 'error' ? '#f44336' : type === 'success' ? '#4caf50' : '#2196f3'};
+            background: ${backgroundColor};
             color: white;
             padding: 15px 25px;
             border-radius: 10px;
@@ -585,6 +655,7 @@ h1 {
     saveGameProgress() {
         try {
             localStorage.setItem('questGameProgress', JSON.stringify(this.player));
+            console.log('Прогресс сохранен');
         } catch (e) {
             console.log('Не удалось сохранить прогресс:', e);
         }
@@ -594,7 +665,9 @@ h1 {
         try {
             const savedProgress = localStorage.getItem('questGameProgress');
             if (savedProgress) {
-                this.player = { ...this.player, ...JSON.parse(savedProgress) };
+                const loadedProgress = JSON.parse(savedProgress);
+                this.player = { ...this.player, ...loadedProgress };
+                console.log('Прогресс загружен:', loadedProgress);
             }
         } catch (e) {
             console.log('Не удалось загрузить прогресс:', e);
@@ -604,42 +677,71 @@ h1 {
 
 // Глобальные функции для вызова из HTML
 function startGame() {
-    window.gameInstance.startGame();
+    if (window.gameInstance) {
+        window.gameInstance.startGame();
+    }
 }
 
 function showLevels() {
-    window.gameInstance.showLevels();
+    if (window.gameInstance) {
+        window.gameInstance.showLevels();
+    }
 }
 
 function showProjects() {
-    window.gameInstance.showProjects();
+    if (window.gameInstance) {
+        window.gameInstance.showProjects();
+    }
 }
 
 function showAbout() {
-    window.gameInstance.showAbout();
+    if (window.gameInstance) {
+        window.gameInstance.showAbout();
+    }
 }
 
 function showMainMenu() {
-    window.gameInstance.showMainMenu();
+    if (window.gameInstance) {
+        window.gameInstance.showMainMenu();
+    }
 }
 
 function startLevel(levelNumber) {
-    window.gameInstance.startLevel(levelNumber);
+    if (window.gameInstance) {
+        window.gameInstance.startLevel(levelNumber);
+    }
 }
 
 function startProject(projectNumber) {
-    window.gameInstance.startProject(projectNumber);
+    if (window.gameInstance) {
+        window.gameInstance.startProject(projectNumber);
+    }
 }
 
 function runCode() {
-    window.gameInstance.runCode();
+    if (window.gameInstance) {
+        window.gameInstance.runCode();
+    }
 }
 
 function resetCode() {
-    window.gameInstance.resetCode();
+    if (window.gameInstance) {
+        window.gameInstance.resetCode();
+    }
 }
 
 // Инициализация игры при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM загружен, инициализация игры...');
     window.gameInstance = new QuestGame();
+    window.gameInstance.init();
 });
+
+// Резервная инициализация если DOM уже загружен
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(() => {
+        console.log('Резервная инициализация...');
+        window.gameInstance = new QuestGame();
+        window.gameInstance.init();
+    }, 100);
+}
